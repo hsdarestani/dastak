@@ -1,0 +1,14 @@
+{
+  "name": "sale-pilot-telegram-bot",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.64.0",
+    "dotenv": "^16.4.1",
+    "axios": "^1.6.7"
+  }
+}
