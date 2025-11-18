@@ -15,10 +15,11 @@ npm run dev
 
 | Method | Path | Description |
 | --- | --- | --- |
-| POST | `/api/products/sync` | Fetch WooCommerce products and store them in Postgres |
+| POST | `/api/products/sync` | Fetch WooCommerce products (requires `X-Business-Key` header or telegram chat id) |
 | POST | `/api/webhooks/instagram` | Receive Instagram DM payloads and trigger AI decisions |
 | POST | `/api/ai/decision` | Run the AI decision engine directly |
-| POST | `/api/messages/send` | Send replies back to Instagram |
-| POST | `/api/telegram/notify` | Notify store owner via Telegram bot |
+| POST | `/api/messages/send` | Send replies back to Instagram (requires `X-Business-Key`) |
+| POST | `/api/telegram/notify` | Notify store owner via Telegram bot (server-to-server, uses stored chat id) |
+| POST | `/api/telegram/link` | Link a Telegram chat to a business via API key |
 
 See `../docs/api.md` for request/response schemas.

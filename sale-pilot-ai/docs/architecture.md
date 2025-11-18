@@ -9,15 +9,15 @@
    - AI Decision Engine → خلاصه، Intent، پاسخ، Action.
    - Human Override Manager → تغییر حالت مکالمه به human.
 3. **PostgreSQL**
-   - جداول مطابق `database-schema.sql`.
+   - جداول مطابق `database-schema.sql` (هر ردیف جدول `business` شامل کلید `api_key`، آدرس WooCommerce و Instagram Page ID/Token است.)
 
 ## Sequence – Flow 1
-1. Instagram پیام را به `/api/webhooks/instagram` می‌فرستد.
-2. پیام در Conversation ذخیره می‌شود.
+1. Instagram پیام را به `/api/webhooks/instagram` می‌فرستد و `instagram_page_id` یا `business_api_key` مشخص می‌کند.
+2. Controller با استفاده از آن فیلدها Business مربوطه را پیدا می‌کند و پیام در Conversation همان کسب‌وکار ذخیره می‌شود.
 3. سرویس محصول براساس متن مشتری ۳-۵ محصول برتر را می‌آورد.
 4. AI Decision Engine با ورودی {conversation, products, business_rules} خروجی `summary, intent, recommended_reply, action, confidence` را بر می‌گرداند.
 5. اگر action = auto → پیام فوراً ارسال می‌شود.
-6. اگر action = semi → پیام و تصمیم برای مالک در تلگرام ارسال می‌شود.
+6. اگر action = semi → پیام و تصمیم برای مالک در تلگرام مخصوص همان chat id ارسال می‌شود.
 7. اگر action = human → human override فعال و هشدار ارسال می‌شود.
 
 ## Sequence – Flow 2 (Human Handover)

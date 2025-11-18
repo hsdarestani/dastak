@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS "user" (
   id SERIAL PRIMARY KEY,
@@ -12,9 +13,17 @@ CREATE TABLE IF NOT EXISTS business (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES "user"(id),
   name TEXT,
+  api_key TEXT UNIQUE NOT NULL DEFAULT md5(random()::text || clock_timestamp()::text),
   wc_url TEXT,
   wc_key TEXT,
-  wc_secret TEXT
+  wc_secret TEXT,
+  ig_business_id TEXT,
+  ig_page_id TEXT,
+  ig_access_token TEXT,
+  telegram_chat_id BIGINT,
+  telegram_owner_name TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS product (

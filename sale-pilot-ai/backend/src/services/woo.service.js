@@ -2,20 +2,29 @@ import axios from 'axios'
 import crypto from 'crypto'
 import { config } from '../config/env.js'
 
-const buildAuthQuery = () => {
+const buildAuthQuery = (business) => {
   const timestamp = Math.floor(Date.now() / 1000)
   const nonce = crypto.randomBytes(8).toString('hex')
+  const key = business?.wc_key || config.wooCommerce.key
+  const secret = business?.wc_secret || config.wooCommerce.secret
+  if (!key || !secret) {
+    throw new Error('WooCommerce credentials are missing for this business')
+  }
   return {
-    consumer_key: config.wooCommerce.key,
-    consumer_secret: config.wooCommerce.secret,
+    consumer_key: key,
+    consumer_secret: secret,
     timestamp,
     nonce
   }
 }
 
-export const fetchProducts = async () => {
-  const params = new URLSearchParams(buildAuthQuery())
-  const endpoint = `${config.wooCommerce.url}/wp-json/wc/v3/products?${params.toString()}`
+export const fetchProducts = async (business) => {
+  const baseUrl = business?.wc_url || config.wooCommerce.url
+  if (!baseUrl) {
+    throw new Error('WooCommerce URL missing for this business')
+  }
+  const params = new URLSearchParams(buildAuthQuery(business))
+  const endpoint = `${baseUrl}/wp-json/wc/v3/products?${params.toString()}`
   const { data } = await axios.get(endpoint)
   return data.map(product => ({
     id: product.id,

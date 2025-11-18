@@ -36,16 +36,16 @@ SalePilot AI یک دستیار هوشمند فروش برای فروشگاه‌�
 📌 4) راه‌اندازی سریع
 
 1. `cd sale-pilot-ai/backend && npm install`
-2. فایل `.env` را از روی `.env.example` بسازید و مقادیر WooCommerce/Instagram/Telegram را پر کنید.
-3. دیتابیس PostgreSQL را با `docs/database-schema.sql` بسازید.
+2. فایل `.env` را از روی `.env.example` بسازید (مقادیر داخل آن تنها برای مقاصد توسعه هستند؛ در محیط واقعی هر کسب‌وکار کلیدهای خودش را در جدول `business` دارد).
+3. دیتابیس PostgreSQL را با `docs/database-schema.sql` بسازید و برای هر مشتری یک ردیف در جدول `business` (با `api_key` منحصربه‌فرد، WooCommerce URL/Keys و Instagram Page ID/Token) ایجاد کنید.
 4. `npm run dev` را اجرا کنید.
-5. برای ربات تلگرام، `cd sale-pilot-ai/telegram-bot && npm install && npm start`.
+5. برای ربات تلگرام چند-مشتریه، `cd sale-pilot-ai/telegram-bot && npm install && npm start` و مشتری در تلگرام دستور `/connect <API_KEY>` را می‌زند تا chat id او به همان ردیف `business` متصل شود.
 
 📌 5) فلوهای کلیدی
 
-- **Flow 1 – دریافت پیام اینستاگرام**: Webhook → ذخیره پیام → AI Decision → ارسال خودکار یا تلگرام برای تأیید.
-- **Flow 2 – Human Handover**: Intent = human → حالت human_override → هشدار تلگرام.
-- **Flow 3 – Sync ووکامرس**: دستور تلگرام → WooCommerce API → ذخیره محصول.
+- **Flow 1 – دریافت پیام اینستاگرام**: Webhook شامل `instagram_page_id` یا `business_api_key` → resolve ردیف business → ذخیره پیام → AI Decision → ارسال خودکار یا هشدار تلگرام مخصوص همان business.
+- **Flow 2 – Human Handover**: Intent = human → حالت human_override → هشدار تلگرام به chat_id ثبت‌شده برای همان API key.
+- **Flow 3 – Sync ووکامرس**: درخواست با هدر `X-Business-Key` یا chat id تلگرام → WooCommerce API با کلیدهای همان مشتری → ذخیره محصول.
 
 📌 6) AI Decision Engine (Prompt Design)
 
