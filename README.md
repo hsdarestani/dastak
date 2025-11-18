@@ -1,239 +1,86 @@
 # dastak
+
 📌 1) تعریف محصول (Product Definition)
 
 SalePilot AI یک دستیار هوشمند فروش برای فروشگاه‌های ووکامرس است که:
 
-پیام‌های مشتریان (اینستاگرام، واتساپ، تلگرام) را دریافت می‌کند
+- پیام‌های مشتریان (اینستاگرام، واتساپ، تلگرام) را دریافت می‌کند
+- مکالمه را تحلیل می‌کند
+- محصول مناسب را از ووکامرس پیدا می‌کند
+- قیمت و موجودی را چک می‌کند
+- یک پاسخ کامل آماده می‌کند
+- در حالت خودکار آن را برای مشتری ارسال می‌کند
+- اگر مشتری پشتیبان انسانی بخواهد، گفتگو را منتقل می‌کند
 
-مکالمه را تحلیل می‌کند
-
-محصول مناسب را از ووکامرس پیدا می‌کند
-
-قیمت و موجودی را چک می‌کند
-
-یک پاسخ کامل آماده می‌کند
-
-در حالت خودکار آن را برای مشتری ارسال می‌کند
-
-اگر مشتری پشتیبان انسانی بخواهد، گفتگو را منتقل می‌کند
-
-هدف MVP:
-
-افزایش فروش فروشگاه‌های ووکامرس با پاسخ‌گویی سریع و هوشمند.
+هدف MVP: افزایش فروش فروشگاه‌های ووکامرس با پاسخ‌گویی سریع و هوشمند.
 
 📌 2) MVP Scope (فقط چیزهای کاملاً ضروری)
-✔ اتصال به ووکامرس
 
-– دریافت لیست محصولات
-– قیمت / موجودی
-– دسته‌بندی
-– گرفتن محصول مرتبط
-
-✔ اتصال به تلگرام (ربات مدیریت فروشگاه)
-
-– ورود مالک
-– نمایش پیام‌های مشتری
-– تأیید/رد پاسخ AI
-– تنظیمات کسب‌وکار
-– نمایش هشدار human-handover
-
-✔ اتصال به اینستاگرام DM (Webhook)
-
-– دریافت پیام
-– بازگرداندن پیام از backend (send API)
-
-✔ موتور AI (یک endpoint)
-
-– خلاصه چند پیام آخر
-– تشخیص intent
-– پیدا کردن محصول
-– ساخت پاسخ فروش‌محور
-– تشخیص نیاز به پشتیبان انسانی
-
-✔ حالت نیمه‌خودکار
-
-– AI فقط پیام می‌سازد
-– مالک تأیید می‌کند
-– سپس ارسال می‌شود
-
-✔ حالت خودکار
-
-– اگر اعتماد بالا + پیام ساده
-→ خودکار ارسال می‌شود
-
-✔ human handover
-
-– اگر مشتری گفت "با پشتیبان صحبت کنم"
-→ AI خاموش
-→ نوتیف برای مالک
-→ گفتگو انسانی می‌شود
+- اتصال به ووکامرس (sync محصولات، قیمت/موجودی، دسته‌بندی، محصول مرتبط)
+- اتصال به تلگرام (ربات مدیریت فروشگاه)
+- اتصال به اینستاگرام DM (Webhook + ارسال پاسخ)
+- موتور AI (یک endpoint شامل summary، intent، reply، action)
+- حالت نیمه‌خودکار / خودکار + human handover
 
 📌 3) معماری MVP
-Frontend:
-   Telegram Bot (owner dashboard only)
 
-Backend (Node.js / Python):
-   - Auth (Telegram login)
-   - WooCommerce Connector
-   - Instagram Webhook
-   - AI Decision Engine
-   - Message Router
-   - Human Override Manager
-   - Database Layer (PostgreSQL)
+```
+/sale-pilot-ai
+  /backend        → سرویس Node.js/Express + PostgreSQL
+  /telegram-bot   → داشبورد مالک (Node + Telegram Bot API)
+  /docs           → معماری، API، Flow ها و Schema دیتابیس
+```
 
-AI:
-   - Conversation Summarizer
-   - Intent Detector
-   - Product Matcher (WooCommerce)
-   - Reply Generator
-   - Action Scorer (auto/semi-auto)
+برای جزئیات معماری، Flow و دیتابیس به پوشه `sale-pilot-ai/docs` مراجعه کنید.
 
-📌 4) دیتابیس (PostgreSQL)
-User
-id, telegram_id, name, phone, created_at
+📌 4) راه‌اندازی سریع
 
-Business
-id, user_id, name, wc_url, wc_key, wc_secret
+1. `cd sale-pilot-ai/backend && npm install`
+2. فایل `.env` را از روی `.env.example` بسازید (مقادیر داخل آن تنها برای مقاصد توسعه هستند؛ در محیط واقعی هر کسب‌وکار کلیدهای خودش را در جدول `business` دارد).
+3. دیتابیس PostgreSQL را با `docs/database-schema.sql` بسازید و برای هر مشتری یک ردیف در جدول `business` (با `api_key` منحصربه‌فرد، WooCommerce URL/Keys و Instagram Page ID/Token) ایجاد کنید.
+4. `npm run dev` را اجرا کنید.
+5. برای ربات تلگرام چند-مشتریه، `cd sale-pilot-ai/telegram-bot && npm install && npm start` و مشتری در تلگرام دستور `/connect <API_KEY>` را می‌زند تا chat id او به همان ردیف `business` متصل شود.
 
-Product
+📌 5) فلوهای کلیدی
 
-(دادهٔ sync شده از ووکامرس)
+- **Flow 1 – دریافت پیام اینستاگرام**: Webhook شامل `instagram_page_id` یا `business_api_key` → resolve ردیف business → ذخیره پیام → AI Decision → ارسال خودکار یا هشدار تلگرام مخصوص همان business.
+- **Flow 2 – Human Handover**: Intent = human → حالت human_override → هشدار تلگرام به chat_id ثبت‌شده برای همان API key.
+- **Flow 3 – Sync ووکامرس**: درخواست با هدر `X-Business-Key` یا chat id تلگرام → WooCommerce API با کلیدهای همان مشتری → ذخیره محصول.
 
-id, business_id, wc_product_id, name, price, stock_status, category, image, attributes_json
+📌 6) AI Decision Engine (Prompt Design)
 
-Customer
-id, channel, external_id, name, username
-
-Conversation
-id, customer_id, business_id, status, last_message_at, mode
-
-Message
-id, conversation_id, sender_type, text, type, media_url, created_at
-
-AI_Decision
-id, conversation_id, summary, intent, recommended_reply, action, confidence, created_at
-
-📌 5) API ها (Backend)
-GET /products/sync
-
-Sync products from WooCommerce
-
-POST /webhooks/instagram
-
-Receiving DM from Instagram
-
-POST /ai/decision
-
-Input: conversation + products
-Output: summary + intent + reply + action
-
-POST /messages/send
-
-Send message back to Instagram
-
-POST /telegram/notify
-
-Notify owner for human-handover
-
-📌 6) جریان داده‌ها (Flows)
-🔵 Flow 1 – دریافت پیام از اینستاگرام
-
-مشتری پیام می‌دهد
-
-اینستاگرام → Webhook → /webhooks/instagram
-
-پیام ذخیره می‌شود
-
-Backend → آخرین ۵ پیام را جمع می‌کند
-
-Backend → محصولات مرتبط ووکامرس را پیدا می‌کند
-
-Backend → /ai/decision
-
-AI → خلاصه + intent + reply + action
-
-اگر action = auto
-→ پیام برای مشتری ارسال می‌شود
-→ log می‌شود
-
-اگر action = semi
-→ پیام می‌رود به تلگرام مالک برای تأیید
-
-مالک Accept / Reject می‌زند
-→ ارسال می‌شود
-
-🔵 Flow 2 – human handover
-
-AI تشخیص می‌دهد intent = human
-
-Conversation.mode = human_override
-
-پیام در تلگرام به صاحب کسب‌وکار:
-
-🚨 یک مشتری درخواست پشتیبانی انسانی دارد  
-
-
-از این لحظه هر پیام مالک → مستقیم برای مشتری ارسال می‌شود
-
-AI در این گفتگو silent می‌ماند
-
-🔵 Flow 3 – اتصال ووکامرس
-
-در تلگرام مالک:
-
-لطفاً URL فروشگاه، key و secret را وارد کنید:
-
-
-سپس:
-
-/products/sync اجرا می‌شود
-
-تمام محصولات ذخیره می‌شوند
-
-هر ۱ ساعت یا On-Demand sync می‌شود
-
-📌 7) AI Decision Engine (Prompt Design)
 Input:
+```json
 {
-  conversation: [...5–10 last messages...],
-  business_profile: {...tone, rules...},
-  products: [...top 3–5 matched products...]
+  "conversation": [...5–10 last messages...],
+  "business_profile": {...tone, rules...},
+  "products": [...top 3–5 matched products...]
 }
+```
 
 Output:
+```json
 {
-  summary: "",
-  intent: "price_inquiry / size / variant / complaint / human",
-  recommended_reply: "",
-  action: "auto | semi | human",
-  confidence: 0.0-1.0
+  "summary": "",
+  "intent": "price_inquiry / size / variant / complaint / human",
+  "recommended_reply": "",
+  "action": "auto | semi | human",
+  "confidence": 0.0-1.0
 }
+```
 
-📌 8) ساختار پروژه (مناسب GitHub + Codex)
-/sale-pilot-ai
-  /backend
-    /src
-      /api
-      /ai
-      /controllers
-      /models
-      /services
-        woo.service.js
-        insta.service.js
-        ai.service.js
-        telegram.service.js
-      /utils
-    /config
-    package.json
-    README.md
+📌 7) دیتابیس (PostgreSQL)
 
-  /telegram-bot
-    bot.js
-    config.json
-    utils.js
+ساختار کامل جداول در `sale-pilot-ai/docs/database-schema.sql` قرار داده شده است. مهم‌ترین جداول: User، Business، Product، Customer، Conversation، Message، AI_Decision.
 
-  /docs
-    api.md
-    architecture.md
-    flows.md
-    database-schema.sql
+📌 8) API ها (Backend)
+
+| Endpoint | توضیح |
+| --- | --- |
+| `POST /api/products/sync` | Sync محصولات ووکامرس |
+| `POST /api/webhooks/instagram` | دریافت پیام از اینستاگرام |
+| `POST /api/ai/decision` | خروجی موتور AI |
+| `POST /api/messages/send` | ارسال پیام برای مشتری |
+| `POST /api/telegram/notify` | اطلاع‌رسانی human handover |
+
+جزئیات بیشتر در `sale-pilot-ai/docs/api.md` آورده شده است.
