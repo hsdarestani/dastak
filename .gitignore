@@ -1,0 +1,6 @@
+node_modules
+.env
+sale-pilot-ai/backend/.env
+sale-pilot-ai/telegram-bot/.env
+npm-debug.log
+.DS_Store
