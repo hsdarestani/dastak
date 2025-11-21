@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS business (
   ig_access_token TEXT,
   telegram_chat_id BIGINT,
   telegram_owner_name TEXT,
+  telegram_owner_bot_token TEXT,
+  telegram_customer_bot_token TEXT,
+  telegram_customer_bot_username TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -44,7 +47,8 @@ CREATE TABLE IF NOT EXISTS customer (
   channel TEXT,
   external_id TEXT,
   name TEXT,
-  username TEXT
+  username TEXT,
+  UNIQUE (channel, external_id)
 );
 
 CREATE TABLE IF NOT EXISTS conversation (

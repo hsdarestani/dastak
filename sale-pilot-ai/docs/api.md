@@ -32,6 +32,31 @@ Incoming message payload (simplified).
 ```
 Response includes AI decision and action.
 
+## POST /api/webhooks/telegram/:botToken
+Webhook مخصوص ربات تلگرام هر فروشگاه (botToken همان `telegram_customer_bot_token` در جدول business است).
+Payload خام آپدیت تلگرام دریافت می‌شود؛ بدنه رایج:
+```json
+{
+  "update_id": 123,
+  "message": {
+    "message_id": 5,
+    "chat": {"id": 99887766, "first_name": "Sara", "username": "sara_customer"},
+    "text": "سلام قیمت؟"
+  }
+}
+```
+هوش مصنوعی تصمیم می‌گیرد پاسخ خودکار بفرستد یا هشدار human handover به مالک بدهد.
+
+## POST /api/telegram/bot
+ثبت یا بروزرسانی توکن ربات تلگرام مشتریان برای هر فروشگاه.
+```json
+{
+  "apiKey": "salepilot_xxx",
+  "botToken": "12345:BOT",
+  "botUsername": "@shop_bot"
+}
+```
+
 ## POST /api/ai/decision
 Provides manual access to the AI engine.
 ```json

@@ -2,9 +2,15 @@ import { findOrCreateConversation, createMessage } from '../models/conversation.
 import { findProductsByKeyword } from '../models/product.model.js'
 import { runAIDecision } from '../services/ai.service.js'
 import { sendMessageToInstagram } from '../services/insta.service.js'
-import { notifyOwner } from '../services/telegram.service.js'
+import { notifyOwner, sendTelegramCustomerMessage } from '../services/telegram.service.js'
 import { config } from '../config/env.js'
-import { findBusinessByApiKey, findBusinessById, findBusinessByInstagramPage } from '../models/business.model.js'
+import {
+  findBusinessByApiKey,
+  findBusinessById,
+  findBusinessByInstagramPage,
+  findBusinessByCustomerBotToken
+} from '../models/business.model.js'
+import { findOrCreateCustomer } from '../models/customer.model.js'
 
 const resolveBusinessFromPayload = async (payload) => {
   if (!payload) return null
@@ -57,6 +63,51 @@ export const instagramWebhook = async (req, res, next) => {
       })
     } else if (aiDecision.action === 'human') {
       await notifyOwner({ businessId, message: '🚨 مشتری درخواست پشتیبانی انسانی دارد' })
+    }
+
+    res.json({ status: 'ok', decision: aiDecision })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const telegramCustomerWebhook = async (req, res, next) => {
+  try {
+    const botToken = req.params.botToken || req.query.botToken
+    const business = await findBusinessByCustomerBotToken(botToken)
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found for provided Telegram bot token' })
+    }
+
+    const update = req.body
+    const message = update?.message
+    const chat = message?.chat
+    const text = message?.text?.trim()
+
+    if (!chat || !text) {
+      return res.json({ status: 'ignored' })
+    }
+
+    const customer = await findOrCreateCustomer({
+      channel: 'telegram',
+      externalId: String(chat.id),
+      name: [chat.first_name, chat.last_name].filter(Boolean).join(' ').trim() || chat.username,
+      username: chat.username
+    })
+    const conversation = await findOrCreateConversation({ customerId: customer.id, businessId: business.id })
+    await createMessage({ conversationId: conversation.id, senderType: 'customer', text })
+
+    const products = await findProductsByKeyword(business.id, text)
+    const aiDecision = await runAIDecision({
+      conversation: [{ sender: 'customer', text }],
+      products,
+      businessRules: { tone: config.ai.businessTone }
+    })
+
+    if (aiDecision.action === 'auto') {
+      await sendTelegramCustomerMessage({ botToken, chatId: chat.id, text: aiDecision.recommended_reply })
+    } else if (aiDecision.action === 'human') {
+      await notifyOwner({ businessId: business.id, message: '🚨 مشتری تلگرام درخواست پشتیبانی انسانی دارد' })
     }
 
     res.json({ status: 'ok', decision: aiDecision })
