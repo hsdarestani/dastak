@@ -12,7 +12,8 @@ npm install
 npm run dev
 ```
 
-`.env` only contains platform-wide values (port, database, AI provider, optional owner bot token). WooCommerce, Instagram و توکن ربات‌های تلگرام برای هر مشتری داخل رکورد جدول `business` ذخیره می‌شوند.
+The Express app also serves a static landing site from `public/`. After starting the server, open `http://localhost:3000/` to
+see the marketing and onboarding page.
 
 ## Key Endpoints
 
