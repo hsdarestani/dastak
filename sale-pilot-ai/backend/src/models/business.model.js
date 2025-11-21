@@ -22,15 +22,22 @@ export const findBusinessByTelegramChat = async (chatId) => {
   return res.rows[0]
 }
 
-export const linkTelegramChatByApiKey = async ({ apiKey, chatId, ownerName }) => {
+export const findBusinessByCustomerBotToken = async (botToken) => {
+  if (!botToken) return null
+  const res = await query('SELECT * FROM business WHERE telegram_customer_bot_token = $1', [botToken])
+  return res.rows[0]
+}
+
+export const linkTelegramChatByApiKey = async ({ apiKey, chatId, ownerName, ownerBotToken }) => {
   const res = await query(
     `UPDATE business
      SET telegram_chat_id = $2,
          telegram_owner_name = COALESCE($3, telegram_owner_name),
+         telegram_owner_bot_token = COALESCE($4, telegram_owner_bot_token),
          updated_at = NOW()
      WHERE api_key = $1
      RETURNING *`,
-    [apiKey, chatId, ownerName]
+    [apiKey, chatId, ownerName, ownerBotToken]
   )
   return res.rows[0]
 }
@@ -53,6 +60,19 @@ export const upsertBusinessInstagram = async ({ id, igBusinessId, igPageId, igAc
      WHERE id = $1
      RETURNING *`,
     [id, igBusinessId, igPageId, igAccessToken]
+  )
+  return res.rows[0]
+}
+
+export const upsertCustomerBotByApiKey = async ({ apiKey, botToken, botUsername }) => {
+  const res = await query(
+    `UPDATE business
+     SET telegram_customer_bot_token = $2,
+         telegram_customer_bot_username = COALESCE($3, telegram_customer_bot_username),
+         updated_at = NOW()
+     WHERE api_key = $1
+     RETURNING *`,
+    [apiKey, botToken, botUsername]
   )
   return res.rows[0]
 }
