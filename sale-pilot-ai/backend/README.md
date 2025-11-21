@@ -11,6 +11,9 @@ npm install
 npm run dev
 ```
 
+The Express app also serves a static landing site from `public/`. After starting the server, open `http://localhost:3000/` to
+see the marketing and onboarding page.
+
 ## Key Endpoints
 
 | Method | Path | Description |
